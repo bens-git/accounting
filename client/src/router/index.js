@@ -10,6 +10,7 @@ const routes = [
     path: "/transaction-list",
     name: "transaction-list",
     component: TransactionList,
+    meta: { requiresAuth: true },
   },
 
   {

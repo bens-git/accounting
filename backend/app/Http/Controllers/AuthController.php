@@ -36,14 +36,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:8',
-            'street_address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
-            'country' => 'required|string|max:255',
-            'postal_code' => 'required|string|max:20',
-            'building_name' => 'nullable|string|max:255',
-            'floor_number' => 'nullable|string|max:50',
-            'unit_number' => 'nullable|string|max:50',
+
         ]);
 
         // Check if the email already exists with an email_verification_token
@@ -67,31 +60,12 @@ class AuthController extends Controller
             'email' => 'unique:users',
         ]);
 
-        // Use a geocoding service to get latitude and longitude
-        $geoData = $this->getCoordinatesFromAddress($validatedData);
-        $latitude = $geoData->latitude;
-        $longitude = $geoData->longitude;
 
-
-        // Create a new location
-        $location = Location::create([
-            'street_address' => $validatedData['street_address'],
-            'city' => $validatedData['city'],
-            'state' => $validatedData['state'],
-            'country' => $validatedData['country'],
-            'postal_code' => $validatedData['postal_code'],
-            'building_name' => $validatedData['building_name'] ?? null,
-            'floor_number' => $validatedData['floor_number'] ?? null,
-            'unit_number' => $validatedData['unit_number'] ?? null,
-            'latitude' => $latitude ?? null,
-            'longitude' => $longitude ?? null,
-        ]);
 
         // Create a new user
         $user = User::create([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
-            'location_id' => $location->id,
             'password' => Hash::make($validatedData['password']),
             'email_verification_token' => Str::random(60),
         ]);

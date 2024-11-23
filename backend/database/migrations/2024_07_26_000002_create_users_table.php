@@ -24,6 +24,7 @@ class CreateUsersTable extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->index('email');
+            $table->integer('maintenance_percentage');
         });
     }
 

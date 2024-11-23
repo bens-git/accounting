@@ -9,7 +9,7 @@ export const useTransactionStore = defineStore("transaction", {
     totalTransactions: 0,
     search: "",
     selectedTransactionId: null,
-    selectedType: null,
+    selectedType: "PURCHASE",
     dateRange: [
       new Date(new Date().setHours(9, 0, 0, 0)),
       new Date(new Date().setHours(17, 0, 0, 0)),
@@ -27,16 +27,16 @@ export const useTransactionStore = defineStore("transaction", {
       this.itemsPerPage = itemsPerPage;
       this.sortBy = sortBy;
 
-      this.fetchPaginatedTransactions();
+      this.fetchTransactions();
     },
 
-    async fetchPaginatedTransactions() {
+    async fetchTransactions() {
       const loadingStore = useLoadingStore();
       const responseStore = useResponseStore();
-      loadingStore.startLoading("fetchPaginatedTransactions");
+      loadingStore.startLoading("fetchTransactions");
 
       try {
-        const { data } = await apiClient.get("/paginated-transactions", {
+        const { data } = await apiClient.get("/transactions", {
           params: {
             page: this.page,
             itemsPerPage: this.itemsPerPage,
@@ -49,14 +49,13 @@ export const useTransactionStore = defineStore("transaction", {
           },
         });
         this.paginatedTransactions = data.transactions;
-
-        this.totalTransactions = data.total;
+        this.totalTransactions = data.count;
       } catch (error) {
         responseStore.setResponse(false, error.response.data.message, [
           error.response.data.errors,
         ]);
       } finally {
-        loadingStore.stopLoading("fetchPaginatedTransactions");
+        loadingStore.stopLoading("fetchTransactions");
       }
     },
 
@@ -67,7 +66,7 @@ export const useTransactionStore = defineStore("transaction", {
 
       try {
         const { data } = await apiClient.get("/types", {});
-        this.types = data.types;
+        this.types = data;
       } catch (error) {
         responseStore.setResponse(false, error.response.data.message, [
           error.response.data.errors,
@@ -88,7 +87,7 @@ export const useTransactionStore = defineStore("transaction", {
         new Date(new Date().setHours(17, 0, 0, 0)),
       ];
 
-      this.fetchPaginatedTransactions();
+      this.fetchTransactions();
     },
 
     async createTransaction(data) {
@@ -101,7 +100,7 @@ export const useTransactionStore = defineStore("transaction", {
           headers: { "Content-Type": "multipart/form-data" },
         });
         this.selectedTransactionId = response.transcation.id;
-        this.fetchPaginatedTransactions();
+        this.fetchTransactions();
         responseStore.setResponse(true, "Type created successfully");
       } catch (error) {
         responseStore.setResponse(false, error.response.data.message, [
@@ -135,7 +134,7 @@ export const useTransactionStore = defineStore("transaction", {
           }
         );
 
-        this.fetchPaginatedTransactions();
+        this.fetchTransactions();
 
         responseStore.setResponse(true, "Transaction updated successfully");
       } catch (error) {
@@ -158,7 +157,7 @@ export const useTransactionStore = defineStore("transaction", {
           (transaction) => transaction.id !== transactionId
         );
         this.selectedTransactionId = null;
-        this.fetchPaginatedTransactions();
+        this.fetchTransactions();
         responseStore.setResponse(true, "Transaction deleted successfully");
       } catch (error) {
         responseStore.setResponse(false, error.response.data.message, [
