@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction;
+use App\Models\Draft;
 use App\Models\User;
 use App\Models\Party;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
-class TransactionController extends Controller
+class DraftController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -23,15 +23,14 @@ class TransactionController extends Controller
         // Get request parameters
         $page = $request->input('page', 1);
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $sortBy = $request->input('sortBy.0.key', 'date'); // Default sort by id
+        $sortBy = $request->input('sortBy.0.key', 'name'); // Default sort by id
         $order = $request->input('sortBy.0.order', 'desc'); // Default order ascending
         $search = $request->input('search', '');
         $month = $request->input('month');
         $year = $request->input('year');
-        $monthNumber = date('m', strtotime($month));
 
         // Base query for data
-        $query = Transaction::with(['user', 'recipient', 'party']);
+        $query = Draft::with(['user', 'recipient', 'party']);
 
 
         // Apply search filter if needed
@@ -50,15 +49,8 @@ class TransactionController extends Controller
             $query->where('type', '=', $request->input('type'));
         }
 
-        // Year filter
-        if ($request->filled('year')) {
-            $query->whereYear('date', $year);
-        }
 
-        // Month filter
-        if ($request->filled('month')) {
-            $query->whereMonth('date', $monthNumber);
-        }
+
 
 
 
@@ -66,15 +58,16 @@ class TransactionController extends Controller
         $query->orderBy($sortBy, $order);
 
 
+
         // Apply pagination
-        $transactions = $query->paginate($itemsPerPage, ['*'], 'page', $page);
-        $transactionsArray = $transactions->items();
-        $total = $transactions->total();
+        $drafts = $query->paginate($itemsPerPage, ['*'], 'page', $page);
+        $draftsArray = $drafts->items();
+        $total = $drafts->total();
 
         // Return response
         return response()->json([
             'count' => $total,
-            'transactions' => $transactionsArray
+            'drafts' => $draftsArray
         ]);
     }
 
@@ -129,20 +122,19 @@ class TransactionController extends Controller
             'type' => 'required|string|max:255',
             'party_id' => 'required|integer|exists:parties,id',
             'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
             'payment_method' => 'nullable|string|max:255',
             'details' => 'nullable|string|max:255',
             'tag' => 'nullable|string|max:255',
             'user_id' => 'required|integer|exists:users,id',
             'recipient_id' => 'nullable|integer|exists:users,id',
-            'recurrence_type' => 'nullable|string|max:255',
+            'recurrence_type' => 'required|string|max:255',
             'recurrence_start_date' => 'nullable|date',
             'recurrence_end_date' => 'nullable|date',
         ]);
 
-        $transaction = Transaction::create($validated);
+        $draft = Draft::create($validated);
 
-        return response()->json($transaction);
+        return response()->json($draft);
     }
 
 
@@ -193,7 +185,6 @@ class TransactionController extends Controller
             'type' => 'required|string|max:255',
             'party_id' => 'required|string|exists:parties,id',
             'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
             'payment_method' => 'nullable|string|max:255',
             'details' => 'nullable|string|max:255',
             'tag' => 'nullable|string|max:255',
@@ -204,12 +195,12 @@ class TransactionController extends Controller
             'recurrence_end_date' => 'nullable|date',
         ]);
 
-        $transaction = Transaction::findOrFail($id);
-        $transaction->fill($validated);
-        $transaction->save();
+        $draft = Draft::findOrFail($id);
+        $draft->fill($validated);
+        $draft->save();
 
 
-        return response()->json($transaction);
+        return response()->json($draft);
     }
 
     /**
@@ -221,23 +212,23 @@ class TransactionController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        $transaction = Transaction::where('id', $id)->where('user_id', $user->id)->first();
-        if (!$transaction) {
-            return response()->json(['message' => 'Transaction not found or you do not have permission to delete it'], 404);
+        $draft = Draft::where('id', $id)->where('user_id', $user->id)->first();
+        if (!$draft) {
+            return response()->json(['message' => 'Draft not found or you do not have permission to delete it'], 404);
         }
 
 
-        // Delete the transaction
-        $transaction->delete();
+        // Delete the draft
+        $draft->delete();
 
-        return response()->json(['message' => 'Transaction deleted successfully']);
+        return response()->json(['message' => 'Draft deleted successfully']);
     }
 
 
     public function getTypesEnumOptions()
     {
-        // Get the enum values for the 'status' column from the transactions table
-        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM transactions WHERE Field = "type"'));
+        // Get the enum values for the 'status' column from the drafts table
+        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM drafts WHERE Field = "type"'));
 
         // Extract the enum options from the result
         $enumOptions = [];
@@ -256,7 +247,7 @@ class TransactionController extends Controller
 
     public function getPaymentMethodsEnumOptions()
     {
-        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM transactions WHERE Field = "payment_method"'));
+        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM drafts WHERE Field = "payment_method"'));
 
         // Extract the enum options from the result
         $enumOptions = [];
@@ -275,7 +266,7 @@ class TransactionController extends Controller
 
     public function getTagsEnumOptions()
     {
-        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM transactions WHERE Field = "tag"'));
+        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM drafts WHERE Field = "tag"'));
 
         // Extract the enum options from the result
         $enumOptions = [];
@@ -294,7 +285,7 @@ class TransactionController extends Controller
 
     public function getRecurrenceTypesEnumOptions()
     {
-        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM transactions WHERE Field = "recurrence_type"'));
+        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM drafts WHERE Field = "recurrence_type"'));
 
         // Extract the enum options from the result
         $enumOptions = [];

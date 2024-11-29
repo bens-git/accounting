@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\DraftController;
 
 
 /*
@@ -31,8 +32,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::get('/types', [TransactionController::class, 'getTypesEnumOptions']);
+    Route::get('/parties', [TransactionController::class, 'getParties']);
+    Route::get('/users', [TransactionController::class, 'getUsers']);
+    Route::get('/payment-methods', [TransactionController::class, 'getPaymentMethodsEnumOptions']);
+    Route::get('/tags', [TransactionController::class, 'getTagsEnumOptions']);
+    Route::get('/recurrence-types', [TransactionController::class, 'getRecurrenceTypesEnumOptions']);
+    Route::get('/drafts', [DraftController::class, 'index']);
     Route::post('/transactions', [TransactionController::class, 'store']);
-    Route::put('/transactions/{id}', [TransactionController::class, 'update']);
+    Route::post('/drafts', [DraftController::class, 'store']);
+    Route::post('/parties', [TransactionController::class, 'postParty']);
+    Route::post('/update-transaction/{id}', [TransactionController::class, 'update']);
+    Route::post('/update-draft/{id}', [DraftController::class, 'update']);
     Route::patch('/transactions/{id}', [TransactionController::class, 'patch']);
     Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
 });

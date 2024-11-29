@@ -95,10 +95,7 @@ export default {
       loadingStore,
       responseStore,
       isLoading,
-      links: [
-        { text: "HOLDFAST", url: "https://holdfast.group" },
-        { text: "CATALOG", route: "/" },
-      ],
+      links: [{ text: "TRANSACTIONS", route: "/" }],
     };
   },
 };

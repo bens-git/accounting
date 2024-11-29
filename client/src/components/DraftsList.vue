@@ -1,13 +1,13 @@
 <template>
   <v-container class="d-flex justify-center">
-    <v-card title="Transactions" flat style="min-width: 90vw; min-height: 90vh">
+    <v-card title="Drafts" flat style="min-width: 90vw; min-height: 90vh">
       <template v-slot:text>
         <v-row>
           <!-- Search Field -->
-          <v-col cols="12" md="2">
+          <v-col cols="12" md="3">
             <v-text-field
               density="compact"
-              v-model="transactionStore.search"
+              v-model="draftStore.search"
               label="Search"
               prepend-inner-icon="mdi-magnify"
               variant="outlined"
@@ -21,8 +21,8 @@
           <v-col cols="12" md="2">
             <v-select
               density="compact"
-              v-model="transactionStore.selectedType"
-              :items="transactionStore.types"
+              v-model="draftStore.selectedType"
+              :items="draftStore.types"
               label="Type"
               :clearable="true"
               @update:modelValue="debounceSearch"
@@ -30,36 +30,25 @@
           </v-col>
 
           <!-- Tag -->
-          <v-col cols="12" md="1">
+          <v-col cols="12" md="2">
             <v-select
               density="compact"
-              v-model="transactionStore.selectedTag"
-              :items="transactionStore.tags"
+              v-model="draftStore.selectedTag"
+              :items="draftStore.tags"
               label="Tag"
               :clearable="true"
               @update:modelValue="debounceSearch"
             />
           </v-col>
+
+          <!-- Recurrence Type -->
           <v-col cols="12" md="2">
-            <!-- Month Picker -->
             <v-select
               density="compact"
-              v-model="transactionStore.selectedMonth"
-              :items="transactionStore.months"
-              label="Month"
-              outlined
-              class="me-4"
-              @update:modelValue="debounceSearch"
-            />
-          </v-col>
-          <v-col cols="12" md="2">
-            <!-- Year Picker -->
-            <v-select
-              density="compact"
-              v-model="transactionStore.selectedYear"
-              :items="years"
-              label="Year"
-              outlined
+              v-model="draftStore.selectedRecurrenceType"
+              :items="draftStore.recurrenceTypes"
+              label="Recurrence Type"
+              :clearable="true"
               @update:modelValue="debounceSearch"
             />
           </v-col>
@@ -69,7 +58,7 @@
             <v-btn
               prepend-icon="mdi-plus"
               color="success"
-              @click="[(isEdit = false), (showTransactionDialog = true)]"
+              @click="[(isEdit = false), (showDraftDialog = true)]"
             >
               New
             </v-btn>
@@ -78,7 +67,7 @@
             <v-btn
               prepend-icon="mdi-refresh"
               color="primary"
-              @click="transactionStore.resetFilters"
+              @click="draftStore.resetFilters"
             >
               Reset
             </v-btn>
@@ -87,14 +76,14 @@
       </template>
 
       <v-data-table-server
-        v-model:items-per-page="transactionStore.itemsPerPage"
+        v-model:items-per-page="draftStore.itemsPerPage"
         :headers="headers"
-        :items="transactionStore.paginatedTransactions"
-        :items-length="transactionStore.totalTransactions"
+        :items="draftStore.paginatedDrafts"
+        :items-length="draftStore.totalDrafts"
         loading-text="Loading... Please wait"
-        :search="transactionStore.search"
+        :search="draftStore.search"
         item-value="id"
-        @update:options="transactionStore.updateOptions"
+        @update:options="draftStore.updateOptions"
         mobile-breakpoint="sm"
       >
         <template v-slot:[`item.actions`]="{ item }">
@@ -102,9 +91,9 @@
             icon
             @click="
               [
-                (transactionStore.selectedTransaction = item),
+                (draftStore.selectedDraft = item),
                 (isEdit = true),
-                (showTransactionDialog = true),
+                (showDraftDialog = true),
               ]
             "
             v-if="userStore.user"
@@ -112,7 +101,7 @@
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
 
-          <v-btn icon @click="deleteTransaction(item)" v-if="userStore.user">
+          <v-btn icon @click="deleteDraft(item)" v-if="userStore.user">
             <v-icon>mdi-delete</v-icon>
           </v-btn>
 
@@ -125,15 +114,11 @@
   </v-container>
 
   <!-- Creation / Modification Modal -->
-  <v-dialog
-    v-model="showTransactionDialog"
-    :persistent="false"
-    class="custom-dialog"
-  >
-    <transaction-form
+  <v-dialog v-model="showDraftDialog" :persistent="false" class="custom-dialog">
+    <draft-form
       :isEdit="isEdit"
-      :transaction="transactionStore.selectedTransaction"
-      @close-modal="showTransactionDialog = false"
+      :draft="draftStore.selectedDraft"
+      @close-modal="showDraftDialog = false"
     />
   </v-dialog>
 
@@ -143,7 +128,7 @@
     :persistent="false"
     class="custom-dialog"
   >
-    <delete-transaction-form
+    <delete-draft-form
       :isEdit="false"
       @close-modal="showDeletionDialog = false"
     />
@@ -152,14 +137,14 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
-import { useTransactionStore } from "@/stores/transaction";
+import { useDraftStore } from "@/stores/draft";
 import { useUserStore } from "@/stores/user";
 import _ from "lodash";
-import DeleteTransactionForm from "./DeleteTransactionForm.vue";
-import TransactionForm from "./TransactionForm.vue";
+import DeleteDraftForm from "./DeleteDraftForm.vue";
+import DraftForm from "./DraftForm.vue";
 import { useRouter } from "vue-router";
 
-const transactionStore = useTransactionStore();
+const draftStore = useDraftStore();
 const userStore = useUserStore();
 const router = useRouter();
 
@@ -171,7 +156,7 @@ function generateYears() {
   return Array.from({ length: range }, (_, i) => currentYear - 10 + i);
 }
 
-const showTransactionDialog = ref(false);
+const showDraftDialog = ref(false);
 const showDeletionDialog = ref(false);
 
 const headers = [
@@ -182,7 +167,7 @@ const headers = [
     key: "actions",
   },
   {
-    title: "Transaction",
+    title: "Draft",
     align: "start",
     sortable: true,
     key: "name",
@@ -224,24 +209,24 @@ const headers = [
     key: "amount",
   },
   {
-    title: "Date",
+    title: "Recurrence Type",
     align: "start",
     sortable: true,
-    key: "date",
+    key: "recurrence_type",
   },
 ];
 
 const debounceSearch = _.debounce(() => {
-  transactionStore.fetchTransactions();
+  draftStore.fetchDrafts();
 }, 300);
 
-const editTransaction = (transaction) => {
-  transactionStore.selectedTransaction = transaction;
+const editDraft = (template) => {
+  draftStore.selectedDraft = template;
   dialog.value = true;
 };
 
-const deleteTransaction = (transaction) => {
-  transactionStore.selectedTransaction = transaction;
+const deleteDraft = (template) => {
+  draftStore.selectedDraft = template;
   showDeletionDialog.value = true;
 };
 
@@ -249,9 +234,10 @@ const goToLogin = () => {
   router.push({ name: "login-form" }); // Adjust the route name as necessary
 };
 
-// Computed properties for date constraints
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+onMounted(async () => {
+  await draftStore.fetchRecurrenceTypes();
+  await draftStore.fetchTags();
+});
 </script>
 
 <style>

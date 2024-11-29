@@ -1,22 +1,27 @@
 <template>
   <v-app-bar app dark>
-
-
     <v-app-bar-title>
-      <a href="https://holdfast.group" target="_blank" rel="noopener noreferrer">
-        <v-img src="@/assets/logo.svg" alt="Logo" contain max-height="40" max-width="40" />
-      </a>
+      <v-img
+        src="@/assets/logo.svg"
+        alt="Logo"
+        contain
+        max-height="40"
+        max-width="40"
+      />
     </v-app-bar-title>
 
-    <v-toolbar-title>
-      Accounting
-    </v-toolbar-title>
+    <v-toolbar-title> Accounting </v-toolbar-title>
 
     <v-spacer />
 
     <div v-for="link in links" :key="link.text">
       <!-- Debug output to help with identifying matching logic -->
-      <v-btn v-if="link.route" :to="link.route" text :class="{ active: isActiveRoute(link.route) }">
+      <v-btn
+        v-if="link.route"
+        :to="link.route"
+        text
+        :class="{ active: isActiveRoute(link.route) }"
+      >
         {{ link.text }}
       </v-btn>
       <v-btn v-else :href="link.url" text>
@@ -24,46 +29,32 @@
       </v-btn>
     </div>
 
-
-
     <v-spacer />
 
     <v-menu v-if="userStore.user">
       <template v-slot:activator="{ props }">
         <v-btn color="primary" v-bind="props">
-          {{ userStore.user.discord_username ? userStore.user.discord_username : userStore.user.name }} <v-icon
-            right>mdi-menu-down</v-icon>
+          {{
+            userStore.user.discord_username
+              ? userStore.user.discord_username
+              : userStore.user.name
+          }}
+          <v-icon right>mdi-menu-down</v-icon>
         </v-btn>
       </template>
       <v-list>
-        <v-list-item @click="myRentals">
-          <v-list-item-title>My Rentals</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="myLoans">
-          <v-list-item-title>My Loans</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="myMangement">
-          <v-list-item-title>My Tools</v-list-item-title>
-        </v-list-item>
         <v-list-item @click="editProfile">
           <v-list-item-title>Edit Profile</v-list-item-title>
         </v-list-item>
-        <v-list-item @click="routeToDiscordLink">
-          <v-list-item-title>Link With Discord</v-list-item-title>
-        </v-list-item>
+
         <v-list-item @click="confirmLogout">
           <v-list-item-title>Logout</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
 
-
-    <v-btn v-if="!userStore.user" to="login-form" text>
-      Login
-    </v-btn>
-    <v-btn v-if="!userStore.user" to="register-form" text>
-      Register
-    </v-btn>
+    <v-btn v-if="!userStore.user" to="login-form" text> Login </v-btn>
+    <v-btn v-if="!userStore.user" to="register-form" text> Register </v-btn>
     <v-btn v-if="!userStore.user" to="request-password-reset-form" text>
       Forgot Password
     </v-btn>
@@ -89,7 +80,6 @@ import { useDisplay } from "vuetify";
 import { useUserStore } from "@/stores/user";
 import { useRouter, useRoute } from "vue-router";
 
-
 const route = useRoute();
 const router = useRouter();
 const { smAndDown } = useDisplay();
@@ -99,6 +89,7 @@ const logoutDialog = ref(false);
 
 const links = [
   { text: "TRANSACTIONS", route: "transaction-list" },
+  { text: "DRAFTS", route: "drafts-list" },
 ];
 
 // Safeguard to handle undefined or null paths
@@ -128,7 +119,6 @@ const routeToDiscordLink = () => {
   router.push({ name: "route-to-discord-link" });
 };
 
-
 const myMangement = () => {
   router.push({ name: "my-tools" });
 };
@@ -140,11 +130,6 @@ const myRentals = () => {
 const myLoans = () => {
   router.push({ name: "my-loans" });
 };
-
-
-
-
-
 </script>
 
 <style>

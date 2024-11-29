@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { useUserStore } from "./user";
 export const useResponseStore = defineStore("response", {
   state: () => ({
     response: {
@@ -16,17 +17,17 @@ export const useResponseStore = defineStore("response", {
         errors,
       };
 
-      // // Check if the user is not authenticated
-      // if (message === "User not authenticated" && !success) {
-      //   const userStore = useUserStore();
+      // Check if the user is not authenticated
+      console.log(message);
+      if (message === "Unauthenticated." && !success) {
+        const userStore = useUserStore();
 
-      //   // Clear user data and token
-      //   userStore.logout(); // Assuming you have this method in your user store
+        // Clear user data and token
+        userStore.logout(); // Assuming you have this method in your user store
 
-      //   // Clear the response
-      //   this.clearResponse();
-
-      // }
+        // Clear the response
+        this.clearResponse();
+      }
     },
 
     clearResponse() {

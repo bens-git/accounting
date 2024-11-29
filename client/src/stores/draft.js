@@ -2,16 +2,15 @@ import { defineStore } from "pinia";
 import apiClient from "@/axios";
 import { useLoadingStore } from "./loading";
 import { useResponseStore } from "./response";
-import { useDraftStore } from "./draft";
 
-export const useTransactionStore = defineStore("transaction", {
+export const useDraftStore = defineStore("draft", {
   state: () => ({
-    paginatedTransactions: [],
-    totalTransactions: 0,
+    paginatedDrafts: [],
+    totalDrafts: 0,
     search: "",
-    selectedTransactionId: null,
-    selectedTransaction: null,
-    selectedType: "PURCHASE",
+    selectedDraftId: null,
+    selectedDraft: null,
+    selectedType: "BILL",
     selectedMonth: null,
     selectedYear: null,
     selectedPartyId: null,
@@ -54,16 +53,16 @@ export const useTransactionStore = defineStore("transaction", {
       } // Current year
 
       this.fetchTypes();
-      this.fetchTransactions();
+      this.fetchDrafts();
     },
 
-    async fetchTransactions() {
+    async fetchDrafts() {
       const loadingStore = useLoadingStore();
       const responseStore = useResponseStore();
-      loadingStore.startLoading("fetchTransactions");
+      loadingStore.startLoading("fetchDrafts");
 
       try {
-        const { data } = await apiClient.get("/transactions", {
+        const { data } = await apiClient.get("/drafts", {
           params: {
             page: this.page,
             itemsPerPage: this.itemsPerPage,
@@ -75,15 +74,15 @@ export const useTransactionStore = defineStore("transaction", {
             year: this.selectedYear,
           },
         });
-        this.paginatedTransactions = data.transactions;
-        this.totalTransactions = data.count;
+        this.paginatedDrafts = data.drafts;
+        this.totalDrafts = data.count;
       } catch (error) {
         console.log(error);
         responseStore.setResponse(false, error.response.data.message, [
           error.response.data.errors,
         ]);
       } finally {
-        loadingStore.stopLoading("fetchTransactions");
+        loadingStore.stopLoading("fetchDrafts");
       }
     },
 
@@ -193,61 +192,36 @@ export const useTransactionStore = defineStore("transaction", {
       this.$reset();
       this.updateOptions(this.page, this.itemsPerPage, this.sortBy);
 
-      this.fetchTransactions();
+      this.fetchDrafts();
     },
 
-    async createTransaction(data) {
+    async createDraft(data) {
       const responseStore = useResponseStore();
       const loadingStore = useLoadingStore();
-      loadingStore.startLoading("createTransaction");
+      loadingStore.startLoading("createDraft");
 
       try {
-        const response = await apiClient.post("/transactions", data, {
+        const response = await apiClient.post("/drafts", data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         console.log(response);
-        this.selectedTransactionId = response.data.id;
-        this.fetchTransactions();
-        responseStore.setResponse(true, "Transaction created successfully");
+        this.selectedDraftId = response.data.id;
+        this.fetchDrafts();
+        responseStore.setResponse(true, "Draft created successfully");
       } catch (error) {
         console.log(error);
         responseStore.setResponse(false, error.response.data.message, [
           error.response.data.errors,
         ]);
       } finally {
-        loadingStore.stopLoading("createTransaction");
+        loadingStore.stopLoading("createDraft");
       }
     },
 
-    async createParty(data) {
+    async updateDraft(data) {
       const responseStore = useResponseStore();
       const loadingStore = useLoadingStore();
-      const draftStore = useDraftStore();
-      loadingStore.startLoading("createParty");
-
-      try {
-        const response = await apiClient.post("/parties", data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        this.selectedPartyId = response.data.id;
-        draftStore.selectedPartyId = response.data.id;
-        this.fetchParties();
-        draftStore.fetchParties();
-        responseStore.setResponse(true, "Party created successfully");
-      } catch (error) {
-        console.log(error);
-        responseStore.setResponse(false, error.response.data.message, [
-          error.response.data.errors,
-        ]);
-      } finally {
-        loadingStore.stopLoading("createParty");
-      }
-    },
-
-    async updateTransaction(data) {
-      const responseStore = useResponseStore();
-      const loadingStore = useLoadingStore();
-      loadingStore.startLoading("updateTransaction");
+      loadingStore.startLoading("updateDraft");
 
       try {
         // Create a new FormData object
@@ -259,42 +233,42 @@ export const useTransactionStore = defineStore("transaction", {
         }
 
         const response = await apiClient.post(
-          `/update-transaction/${data.get("id")}`,
+          `/update-draft/${data.get("id")}`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
           }
         );
 
-        this.fetchTransactions();
+        this.fetchDrafts();
 
-        responseStore.setResponse(true, "Transaction updated successfully");
+        responseStore.setResponse(true, "Draft updated successfully");
       } catch (error) {
         responseStore.setResponse(false, error.response.data.message, [
           error.response.data.errors,
         ]);
       } finally {
-        loadingStore.stopLoading("updateTransaction");
+        loadingStore.stopLoading("updateDraft");
       }
     },
 
-    async deleteTransaction() {
+    async deleteDraft() {
       const responseStore = useResponseStore();
       const loadingStore = useLoadingStore();
-      loadingStore.startLoading("deleteTransaction");
+      loadingStore.startLoading("deleteDraft");
 
       try {
-        await apiClient.delete(`/transactions/${this.selectedTransaction.id}`);
-        this.selectedTransaction = null;
-        this.selectedTransactionId = null;
-        this.fetchTransactions();
-        responseStore.setResponse(true, "Transaction deleted successfully");
+        await apiClient.delete(`/drafts/${this.selectedDraft.id}`);
+        this.selectedDraft = null;
+        this.selectedDraftId = null;
+        this.fetchDrafts();
+        responseStore.setResponse(true, "Draft deleted successfully");
       } catch (error) {
         responseStore.setResponse(false, error.response.data.message, [
           error.response.data.errors,
         ]);
       } finally {
-        loadingStore.stopLoading("deleteTransaction");
+        loadingStore.stopLoading("deleteDraft");
       }
     },
   },

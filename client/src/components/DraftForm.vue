@@ -1,22 +1,22 @@
 <template>
   <v-card>
     <v-card-title>{{
-      isEdit ? "Edit Transaction" : "Create New Transaction"
+      isEdit ? "Edit Draft" : "Create New Draft"
     }}</v-card-title>
     <v-card-text>
-      <!-- Form Inputs for Creating/Updating a Transaction -->
+      <!-- Form Inputs for Creating/Updating a Draft -->
       <v-select
-        v-if="transactionStore.types"
+        v-if="draftStore.types"
         density="compact"
-        v-model="localTransaction.type"
-        :items="transactionStore.types"
+        v-model="localDraft.type"
+        :items="draftStore.types"
         label="Type"
-        :error-messages="responseStore?.response?.errors[0]?.transaction"
+        :error-messages="responseStore?.response?.errors[0]?.draft"
       />
 
       <v-text-field
         density="compact"
-        v-model="localTransaction.name"
+        v-model="localDraft.name"
         :error-messages="responseStore?.response?.errors[0]?.name"
         label="Name"
       />
@@ -24,12 +24,12 @@
       <v-row>
         <v-col cols="10">
           <v-autocomplete
-            v-if="transactionStore.parties"
+            v-if="draftStore.parties"
             density="compact"
             clearable
             required
-            v-model="localTransaction.party_id"
-            :items="transactionStore.parties"
+            v-model="localDraft.party_id"
+            :items="draftStore.parties"
             item-value="id"
             item-title="name"
             label="Party"
@@ -45,9 +45,9 @@
 
       <v-text-field
         density="compact"
-        v-model="localTransaction.amount"
+        v-model="localDraft.amount"
         label="Amount"
-        transaction="number"
+        draft="number"
         placeholder="Enter amount"
         prefix="$"
         required
@@ -56,44 +56,38 @@
         :error-messages="responseStore?.response?.errors[0]?.amount"
       ></v-text-field>
 
-      <v-date-input
-        label="Date"
-        density="compact"
-        v-model="localTransaction.date"
-      />
-
       <v-select
-        v-if="transactionStore.paymentMethods"
+        v-if="draftStore.paymentMethods"
         density="compact"
         clearable
-        v-model="localTransaction.payment_method"
-        :items="transactionStore.paymentMethods"
+        v-model="localDraft.payment_method"
+        :items="draftStore.paymentMethods"
         label="Payment Method"
         :error-messages="responseStore?.response?.errors[0]?.payment_method"
       />
 
       <v-text-field
         density="compact"
-        v-model="localTransaction.details"
+        v-model="localDraft.details"
         :error-messages="responseStore?.response?.errors[0]?.details"
         label="Details"
       />
 
       <v-select
-        v-if="transactionStore.tags"
+        v-if="draftStore.tags"
         density="compact"
         clearable
-        v-model="localTransaction.tag"
-        :items="transactionStore.tags"
+        v-model="localDraft.tag"
+        :items="draftStore.tags"
         label="Tag"
         :error-messages="responseStore?.response?.errors[0]?.tag"
       />
 
       <v-select
-        v-if="transactionStore.users"
+        v-if="draftStore.users"
         density="compact"
-        v-model="localTransaction.user_id"
-        :items="transactionStore.users"
+        v-model="localDraft.user_id"
+        :items="draftStore.users"
         label="User"
         item-value="id"
         item-title="name"
@@ -101,11 +95,11 @@
       />
 
       <v-select
-        v-if="transactionStore.users"
+        v-if="draftStore.users && localDraft.type == 'PURCHASE'"
         density="compact"
         clearable
-        v-model="localTransaction.recipient_id"
-        :items="transactionStore.users"
+        v-model="localDraft.recipient_id"
+        :items="draftStore.users"
         label="Recipient"
         item-value="id"
         item-title="name"
@@ -113,30 +107,30 @@
       />
 
       <v-select
-        v-if="transactionStore.recurrenceTypes"
+        v-if="draftStore.recurrenceTypes"
         density="compact"
         clearable
-        v-model="localTransaction.recurrence_type"
-        :items="transactionStore.recurrenceTypes"
+        v-model="localDraft.recurrence_type"
+        :items="draftStore.recurrenceTypes"
         label="Recurrence Type"
         :error-messages="responseStore?.response?.errors[0]?.recurrence_type"
       />
 
       <v-date-input
         label="Recurrence Start Date"
-        v-if="localTransaction.recurrence_type"
+        v-if="localDraft.recurrence_type"
         density="compact"
-        v-model="localTransaction.recurrence_start_date"
+        v-model="localDraft.recurrence_start_date"
       />
       <v-date-input
         label="Recurrence Dne Date"
-        v-if="localTransaction.recurrence_type"
+        v-if="localDraft.recurrence_type"
         density="compact"
-        v-model="localTransaction.recurrence_end_date"
+        v-model="localDraft.recurrence_end_date"
       />
     </v-card-text>
     <v-card-actions>
-      <v-btn color="primary" @click="saveTransaction">{{
+      <v-btn color="primary" @click="saveDraft">{{
         isEdit ? "Update" : "Create"
       }}</v-btn>
       <v-btn text @click="closeModal">Cancel</v-btn>
@@ -160,12 +154,12 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import { useResponseStore } from "@/stores/response";
-import { useTransactionStore } from "@/stores/transaction";
+import { useDraftStore } from "@/stores/draft";
 import { useUserStore } from "@/stores/user";
 import PartyForm from "./PartyForm.vue";
 import { useDate } from "vuetify";
 
-const transactionStore = useTransactionStore();
+const draftStore = useDraftStore();
 const responseStore = useResponseStore();
 const userStore = useUserStore();
 const adapter = useDate();
@@ -174,40 +168,38 @@ const showPartyCreationDialog = ref(false);
 
 // Define props
 const props = defineProps({
-  showTransactionModal: Boolean,
+  showDraftModal: Boolean,
   isEdit: Boolean,
-  transaction: Object,
+  draft: Object,
 });
 
 const emit = defineEmits([
-  "update-transaction",
-  "create-transaction",
-  "update:showTransactionModal",
+  "update-draft",
+  "create-draft",
+  "update:showDraftModal",
   "close-modal",
 ]);
 
-const localTransaction = ref({});
+const localDraft = ref({});
 
 const handlePartyCreated = (partyId) => {
-  localTransaction.value.party_id = transactionStore.selectedPartyId;
+  localDraft.value.party_id = draftStore.selectedPartyId;
 };
 
-// Function to initialize localTransaction
-const initializeLocalTransaction = () => {
-  if (props.isEdit && props.transaction) {
-    localTransaction.value = {
-      ...props.transaction,
+// Function to initialize localDraft
+const initializeLocalDraft = () => {
+  if (props.isEdit && props.draft) {
+    localDraft.value = {
+      ...props.draft,
     };
     // Ensure the `date` is a valid Date object
-    if (localTransaction.value.date) {
-      localTransaction.value.date = adapter.parseISO(
-        localTransaction.value.date
-      );
+    if (localDraft.value.date) {
+      localDraft.value.date = adapter.parseISO(localDraft.value.date);
     }
   } else {
-    localTransaction.value = {
+    localDraft.value = {
       name: "",
-      type: transactionStore.selectedType,
+      type: draftStore.selectedType,
       amount: null,
       date: useDate(),
       payment_method: null,
@@ -218,35 +210,34 @@ const initializeLocalTransaction = () => {
   }
 };
 
-// Initialize localTransaction on component mount or when the transaction changes
+// Initialize localDraft on component mount or when the draft changes
 onMounted(() => {
-  transactionStore.fetchParties();
-  transactionStore.fetchPaymentMethods();
-  transactionStore.fetchTypes();
-  transactionStore.fetchRecurrenceTypes();
-  transactionStore.fetchTags();
-  transactionStore.fetchUsers();
-  initializeLocalTransaction();
+  draftStore.fetchParties();
+  draftStore.fetchPaymentMethods();
+  draftStore.fetchTypes();
+  draftStore.fetchRecurrenceTypes();
+  draftStore.fetchTags();
+  draftStore.fetchUsers();
+  initializeLocalDraft();
 });
 
 watch(
-  () => props.transaction,
+  () => props.draft,
   () => {
-    initializeLocalTransaction();
+    initializeLocalDraft();
   },
   { deep: true }
 );
 
-const saveTransaction = async () => {
+const saveDraft = async () => {
   const responseStore = useResponseStore();
   const formData = new FormData();
 
-  // Append all properties of local transaction except images handling
-  for (let [key, value] of Object.entries(localTransaction.value)) {
+  console.log(localDraft.value);
+  // Append all properties of local draft except images handling
+  for (let [key, value] of Object.entries(localDraft.value)) {
     if (
-      (key == "date" ||
-        key == "recurrence_start_date" ||
-        key == "recurrence_end_date") &&
+      (key == "recurrence_start_date" || key == "recurrence_end_date") &&
       value
     ) {
       value = value.toISOString().split("T")[0];
@@ -262,13 +253,13 @@ const saveTransaction = async () => {
 
   try {
     if (props.isEdit) {
-      await transactionStore.updateTransaction(formData);
+      await draftStore.updateDraft(formData);
     } else {
-      await transactionStore.createTransaction(formData);
+      await draftStore.createDraft(formData);
     }
     if (responseStore.response.success) {
       closeModal();
-      transactionStore.fetchTransactions();
+      draftStore.fetchDrafts();
     } else {
       console.log("Error:", responseStore.response.message);
     }

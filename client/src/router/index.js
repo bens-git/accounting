@@ -14,6 +14,13 @@ const routes = [
   },
 
   {
+    path: "/drafts-list",
+    name: "drafts-list",
+    component: () => import("@/components/DraftsList.vue"),
+    meta: { requiresAuth: true },
+  },
+
+  {
     path: "/login-form",
     name: "login-form",
     component: LoginForm,

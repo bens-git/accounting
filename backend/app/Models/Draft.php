@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Transaction extends Model
+class Draft extends Model
 {
     use HasFactory;
     public $timestamps = false; // Disable automatic timestamps
 
-    protected $fillable = ['name', 'type', 'party_id', 'amount', 'date', 'payment_method', 'details', 'tag', 'user_id', 'recipient_id', 'recurrence_type', 'recurrence_start_date', 'recurrence_end_date'];
+    protected $fillable = ['name', 'type', 'party_id', 'amount', 'payment_method', 'details', 'tag', 'user_id', 'recipient_id', 'recurrence_type', 'recurrence_start_date', 'recurrence_end_date'];
 
     public function user()
     {
