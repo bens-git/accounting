@@ -38,11 +38,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tags', [TransactionController::class, 'getTagsEnumOptions']);
     Route::get('/recurrence-types', [TransactionController::class, 'getRecurrenceTypesEnumOptions']);
     Route::get('/drafts', [DraftController::class, 'index']);
+    Route::get('/drafts/all', [DraftController::class, 'all']);
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::post('/drafts', [DraftController::class, 'store']);
     Route::post('/parties', [TransactionController::class, 'postParty']);
     Route::post('/update-transaction/{id}', [TransactionController::class, 'update']);
     Route::post('/update-draft/{id}', [DraftController::class, 'update']);
+    Route::post('/populate-month', [DraftController::class, 'populateMonth']);
     Route::patch('/transactions/{id}', [TransactionController::class, 'patch']);
     Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
 });

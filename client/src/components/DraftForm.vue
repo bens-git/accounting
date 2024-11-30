@@ -117,16 +117,10 @@
       />
 
       <v-date-input
-        label="Recurrence Start Date"
-        v-if="localDraft.recurrence_type"
+        label="Recurrence Start Month"
+        v-if="localDraft.recurrence_type == 'YEARLY'"
         density="compact"
-        v-model="localDraft.recurrence_start_date"
-      />
-      <v-date-input
-        label="Recurrence Dne Date"
-        v-if="localDraft.recurrence_type"
-        density="compact"
-        v-model="localDraft.recurrence_end_date"
+        v-model="localDraft.recurrence_start_month"
       />
     </v-card-text>
     <v-card-actions>

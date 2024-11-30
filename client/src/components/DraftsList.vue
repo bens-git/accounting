@@ -78,13 +78,15 @@
       <v-data-table-server
         v-model:items-per-page="draftStore.itemsPerPage"
         :headers="headers"
-        :items="draftStore.paginatedDrafts"
+        :items="draftStore.drafts"
         :items-length="draftStore.totalDrafts"
         loading-text="Loading... Please wait"
         :search="draftStore.search"
         item-value="id"
         @update:options="draftStore.updateOptions"
         mobile-breakpoint="sm"
+        fixed-header
+        :height="'65vh'"
       >
         <template v-slot:[`item.actions`]="{ item }">
           <v-btn
@@ -108,6 +110,10 @@
           <v-btn icon @click="goToLogin" v-else>
             <v-icon>mdi-login</v-icon>
           </v-btn>
+        </template>
+
+        <template v-slot:[`item.recurrence_start_month`]="{ item }">
+          {{ getMonthName(item.recurrence_start_month) }}
         </template>
       </v-data-table-server>
     </v-card>
@@ -149,6 +155,12 @@ const userStore = useUserStore();
 const router = useRouter();
 
 const years = generateYears();
+
+function getMonthName(month) {
+  // Adjust for 0-indexed months in JavaScript Date
+  const date = new Date(2000, month - 1);
+  return new Intl.DateTimeFormat("en-US", { month: "long" }).format(date);
+}
 
 function generateYears() {
   const currentYear = new Date().getFullYear();
@@ -213,6 +225,12 @@ const headers = [
     align: "start",
     sortable: true,
     key: "recurrence_type",
+  },
+  {
+    title: "Recurrence Start Month",
+    align: "start",
+    sortable: true,
+    key: "recurrence_start_month",
   },
 ];
 

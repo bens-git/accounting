@@ -23,8 +23,8 @@ class CreateDraftsTable extends Migration
             $table->enum('tag', ['MAINTENANCE'])->nullable();
             $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
             $table->foreignId('recipient_id')->nullable()->constrained('users')->onDelete('restrict');
-            $table->enum('recurrence_type', ['MONTHLY', 'BI-MONTHLY', 'YEARLY']); // type of recurrence
-            $table->timestamp('recurrence_start_month'); // start month of the recurrence
+            $table->enum('recurrence_type', ['MONTHLY', 'BI-MONTHLY EVEN', 'BI-MONTHLY ODD', 'YEARLY']); // type of recurrence
+            $table->integer('recurrence_start_month')->default(1); // start month of the recurrence
             $table->foreignId('party_id')->nullable()->constrained('parties')->onDelete('restrict');
         });
     }

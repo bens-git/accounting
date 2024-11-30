@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Draft;
 use App\Models\User;
 use App\Models\Party;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
+use DateTime;
 use Illuminate\Support\Facades\Log;
 
 class DraftController extends Controller
@@ -23,11 +25,15 @@ class DraftController extends Controller
         // Get request parameters
         $page = $request->input('page', 1);
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $sortBy = $request->input('sortBy.0.key', 'name'); // Default sort by id
-        $order = $request->input('sortBy.0.order', 'desc'); // Default order ascending
+        $sortBy = $request->input('sortBy'); // Default sort by id
         $search = $request->input('search', '');
-        $month = $request->input('month');
-        $year = $request->input('year');
+        $inputMonth = $request->input('month');
+
+
+        if ($inputMonth) {
+            // Convert full month name to numeric month
+            $month = DateTime::createFromFormat('F', ucfirst(strtolower($inputMonth)))->format('n');
+        }
 
         // Base query for data
         $query = Draft::with(['user', 'recipient', 'party']);
@@ -50,19 +56,50 @@ class DraftController extends Controller
         }
 
 
+        if (isset($month)) {
+            $query->where(function ($query) use ($month) {
+                // Exclude BI-MONTHLY based on month parity
+                if ($month % 2 == 0) {
+                    // Even month: exclude BI-MONTHLY ODD
+                    $query->where('recurrence_type', '!=', 'BI-MONTHLY ODD');
+                } else {
+                    // Odd month: exclude BI-MONTHLY EVEN
+                    $query->where('recurrence_type', '!=', 'BI-MONTHLY EVEN');
+                }
+
+                // Include YEARLY only if recurrence_start_month matches the input month
+                $query->where(function ($subQuery) use ($month) {
+                    $subQuery->where('recurrence_type', '!=', 'YEARLY') // Exclude other YEARLY drafts
+                        ->orWhere('recurrence_type', 'YEARLY')
+                        ->where('recurrence_start_month', $month); // Only include YEARLY if recurrence_start_month matches
+                });
+            });
+        }
 
 
 
 
         // Apply sorting
-        $query->orderBy($sortBy, $order);
+        if ($sortBy) {
+            foreach ($sortBy as $sort) {
+                $key = $sort['key'];
+                $order = $sort['order'];
 
+
+                $query->orderBy($key, $order);
+            }
+        }
 
 
         // Apply pagination
-        $drafts = $query->paginate($itemsPerPage, ['*'], 'page', $page);
-        $draftsArray = $drafts->items();
-        $total = $drafts->total();
+        if ($itemsPerPage == -1) {
+            $draftsArray = $query->get()->toArray(); // Get all items without pagination
+            $total = count($draftsArray);
+        } else {
+            $drafts = $query->paginate($itemsPerPage, ['*'], 'page', $page);
+            $draftsArray = $drafts->items();
+            $total = $drafts->total();
+        }
 
         // Return response
         return response()->json([
@@ -70,6 +107,7 @@ class DraftController extends Controller
             'drafts' => $draftsArray
         ]);
     }
+
 
 
 
@@ -138,34 +176,51 @@ class DraftController extends Controller
     }
 
 
-    public function postParty(Request $request)
+    public function populateMonth(Request $request)
     {
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:parties,name',
+        $validated = $request->validate([
+            'month' => 'required|string|max:255',
+            'year' => 'required|integer',
         ]);
 
-        if ($validator->fails()) {
-            // Rename the error key before returning the response
-            $errors = $validator->errors()->toArray();
+        // Convert full month name to numeric month
+        $firstDayOfMonth = date('Y-m-d', strtotime("first day of " . $validated['month'] . " " . $validated['year']));
 
-            $customErrors = [];
-            foreach ($errors as $key => $messages) {
-                $customKey = $key === 'name' ? 'party_name' : $key;
-                $customErrors[$customKey] = $messages;
-            }
 
-            return response()->json([
-                'message' => 'Party creation failed.',
-                'errors' => $customErrors,
-            ], 422);
+        $newRequest = new Request([
+            'itemsPerPage' => -1,
+            'month' => $validated['month'],
+        ]);
+
+
+        // Call methodTwo and pass the modified request
+        $response = $this->index($newRequest);
+
+        if ($response instanceof JsonResponse) {
+            // Decode the JSON response to a PHP array
+            $data = $response->getData(true); // Pass `true` for associative array
+            $drafts = $data['drafts'];
+        }
+
+        foreach ($drafts as $draft) {
+            $transactionData = [
+                'name' => $draft['name'],
+                'type' => $draft['type'],
+                'party_id' => $draft['party_id'],
+                'amount' => $draft['amount'],
+                'date' => $firstDayOfMonth,
+                'payment_method' => $draft['payment_method'],
+                'details' => $draft['details'],
+                'tag' => $draft['tag'],
+                'user_id' => $draft['user_id'],
+                'recipient_id' => $draft['recipient_id'],
+            ];
+            $transaction = Transaction::create($transactionData);
         }
 
 
 
-        $party = Party::create($validator->validated());
-
-        return response()->json($party);
+        return response()->json(['message' => 'Drafts populated']);
     }
 
 

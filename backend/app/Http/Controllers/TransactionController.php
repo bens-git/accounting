@@ -67,9 +67,15 @@ class TransactionController extends Controller
 
 
         // Apply pagination
-        $transactions = $query->paginate($itemsPerPage, ['*'], 'page', $page);
-        $transactionsArray = $transactions->items();
-        $total = $transactions->total();
+        if ($itemsPerPage == -1) {
+            $transactionsArray = $query->get()->toArray(); // Get all items without pagination
+            $total = count($transactionsArray);
+        } else {
+            $transactions = $query->paginate($itemsPerPage, ['*'], 'page', $page);
+            $transactionsArray = $transactions->items();
+            $total = $transactions->total();
+        }
+
 
         // Return response
         return response()->json([
@@ -199,9 +205,6 @@ class TransactionController extends Controller
             'tag' => 'nullable|string|max:255',
             'user_id' => 'nullable|integer|exists:users,id',
             'recipient_id' => 'nullable|integer|exists:users,id',
-            'recurrence_type' => 'nullable|string|max:255',
-            'recurrence_start_date' => 'nullable|date',
-            'recurrence_end_date' => 'nullable|date',
         ]);
 
         $transaction = Transaction::findOrFail($id);
@@ -294,7 +297,7 @@ class TransactionController extends Controller
 
     public function getRecurrenceTypesEnumOptions()
     {
-        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM transactions WHERE Field = "recurrence_type"'));
+        $enumValues = DB::select(DB::raw('SHOW COLUMNS FROM drafts WHERE Field = "recurrence_type"'));
 
         // Extract the enum options from the result
         $enumOptions = [];

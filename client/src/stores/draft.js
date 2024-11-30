@@ -2,10 +2,11 @@ import { defineStore } from "pinia";
 import apiClient from "@/axios";
 import { useLoadingStore } from "./loading";
 import { useResponseStore } from "./response";
+import { useTransactionStore } from "@/stores/transaction";
 
 export const useDraftStore = defineStore("draft", {
   state: () => ({
-    paginatedDrafts: [],
+    drafts: [],
     totalDrafts: 0,
     search: "",
     selectedDraftId: null,
@@ -16,8 +17,10 @@ export const useDraftStore = defineStore("draft", {
     selectedPartyId: null,
     page: 1,
     itemsPerPage: 10,
-    sortBy: "date",
-    order: "asc",
+    sortBy: [
+      { key: "type", order: "asc" },
+      { key: "name", order: "asc" },
+    ],
     types: [],
     paymentMethods: [],
     recurrenceTypes: [],
@@ -44,13 +47,7 @@ export const useDraftStore = defineStore("draft", {
       this.itemsPerPage = itemsPerPage;
       this.sortBy = sortBy;
 
-      const now = new Date();
-      if (!this.selectedMonth) {
-        this.selectedMonth = this.months[now.getMonth()];
-      } // Current month
-      if (!this.selectedYear) {
-        this.selectedYear = now.getFullYear();
-      } // Current year
+      this.selectedMonth = null;
 
       this.fetchTypes();
       this.fetchDrafts();
@@ -74,7 +71,7 @@ export const useDraftStore = defineStore("draft", {
             year: this.selectedYear,
           },
         });
-        this.paginatedDrafts = data.drafts;
+        this.drafts = data.drafts;
         this.totalDrafts = data.count;
       } catch (error) {
         console.log(error);
@@ -269,6 +266,37 @@ export const useDraftStore = defineStore("draft", {
         ]);
       } finally {
         loadingStore.stopLoading("deleteDraft");
+      }
+    },
+
+    async populateMonth() {
+      const responseStore = useResponseStore();
+      const loadingStore = useLoadingStore();
+      const transactionStore = useTransactionStore();
+      loadingStore.startLoading("populateMonth");
+
+      try {
+        // Create a new FormData object
+        const formData = new FormData();
+
+        const response = await apiClient.post(
+          `/populate-month`,
+          { month: this.selectedMonth, year: this.selectedYear },
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+
+        transactionStore.fetchTransactions();
+
+        responseStore.setResponse(true, "Draft populated successfully");
+      } catch (error) {
+        console.log(error);
+        responseStore.setResponse(false, error.response.data.message, [
+          error.response.data.errors,
+        ]);
+      } finally {
+        loadingStore.stopLoading("populateMonth");
       }
     },
   },

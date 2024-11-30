@@ -4,7 +4,7 @@
       <template v-slot:text>
         <v-row>
           <!-- Search Field -->
-          <v-col cols="12" md="2">
+          <v-col cols="12" md="3">
             <v-text-field
               density="compact"
               v-model="transactionStore.search"
@@ -18,7 +18,7 @@
           </v-col>
 
           <!-- Type -->
-          <v-col cols="12" md="2">
+          <v-col cols="12" md="3">
             <v-select
               density="compact"
               v-model="transactionStore.selectedType"
@@ -30,7 +30,7 @@
           </v-col>
 
           <!-- Tag -->
-          <v-col cols="12" md="1">
+          <v-col cols="12" md="2">
             <v-select
               density="compact"
               v-model="transactionStore.selectedTag"
@@ -62,10 +62,10 @@
               outlined
               @update:modelValue="debounceSearch"
             />
-          </v-col>
-
+          </v-col> </v-row
+        ><v-row>
           <!-- Create Button -->
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="12">
             <v-btn
               prepend-icon="mdi-plus"
               color="success"
@@ -82,6 +82,15 @@
             >
               Reset
             </v-btn>
+
+            <!-- Populate from Drafts Button -->
+            <v-btn
+              prepend-icon="mdi-database-import"
+              color="primary"
+              @click="showPopulationDialog = true"
+            >
+              Populate From Drafts
+            </v-btn>
           </v-col>
         </v-row>
       </template>
@@ -96,6 +105,8 @@
         item-value="id"
         @update:options="transactionStore.updateOptions"
         mobile-breakpoint="sm"
+        fixed-header
+        :height="'55vh'"
       >
         <template v-slot:[`item.actions`]="{ item }">
           <v-btn
@@ -148,15 +159,28 @@
       @close-modal="showDeletionDialog = false"
     />
   </v-dialog>
+
+  <!-- Population Modal -->
+  <v-dialog
+    v-model="showPopulationDialog"
+    :persistent="false"
+    class="custom-dialog"
+  >
+    <populate-from-drafts-form
+      :isEdit="false"
+      @close-modal="showPopulationDialog = false"
+    />
+  </v-dialog>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref } from "vue";
 import { useTransactionStore } from "@/stores/transaction";
 import { useUserStore } from "@/stores/user";
 import _ from "lodash";
 import DeleteTransactionForm from "./DeleteTransactionForm.vue";
 import TransactionForm from "./TransactionForm.vue";
+import PopulateFromDraftsForm from "./PopulateFromDraftsForm.vue";
 import { useRouter } from "vue-router";
 
 const transactionStore = useTransactionStore();
@@ -173,6 +197,7 @@ function generateYears() {
 
 const showTransactionDialog = ref(false);
 const showDeletionDialog = ref(false);
+const showPopulationDialog = ref(false);
 
 const headers = [
   {
