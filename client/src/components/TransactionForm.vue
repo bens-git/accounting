@@ -60,6 +60,7 @@
         label="Date"
         density="compact"
         v-model="localTransaction.date"
+        format="MMMM D, YYYY"
       />
 
       <v-select
@@ -111,29 +112,6 @@
         item-title="name"
         :error-messages="responseStore?.response?.errors[0]?.recipient_id"
       />
-
-      <v-select
-        v-if="transactionStore.recurrenceTypes"
-        density="compact"
-        clearable
-        v-model="localTransaction.recurrence_type"
-        :items="transactionStore.recurrenceTypes"
-        label="Recurrence Type"
-        :error-messages="responseStore?.response?.errors[0]?.recurrence_type"
-      />
-
-      <v-date-input
-        label="Recurrence Start Date"
-        v-if="localTransaction.recurrence_type"
-        density="compact"
-        v-model="localTransaction.recurrence_start_date"
-      />
-      <v-date-input
-        label="Recurrence Dne Date"
-        v-if="localTransaction.recurrence_type"
-        density="compact"
-        v-model="localTransaction.recurrence_end_date"
-      />
     </v-card-text>
     <v-card-actions>
       <v-btn color="primary" @click="saveTransaction">{{
@@ -169,6 +147,7 @@ const transactionStore = useTransactionStore();
 const responseStore = useResponseStore();
 const userStore = useUserStore();
 const adapter = useDate();
+const { date } = useDate();
 
 const showPartyCreationDialog = ref(false);
 
@@ -209,7 +188,7 @@ const initializeLocalTransaction = () => {
       name: "",
       type: transactionStore.selectedType,
       amount: null,
-      date: useDate(),
+      date: ref(date(new Date(), "YYYY-MM-DD")),
       payment_method: null,
       details: null,
       tag: null,

@@ -1,6 +1,10 @@
 <template>
   <v-container class="d-flex justify-center">
-    <v-card title="Drafts" flat style="min-width: 90vw; min-height: 90vh">
+    <v-card
+      title="Drafts"
+      flat
+      style="min-width: 90vw; max-height: 88vh; min-height: 88vh"
+    >
       <template v-slot:text>
         <v-row>
           <!-- Search Field -->

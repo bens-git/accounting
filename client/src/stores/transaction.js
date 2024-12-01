@@ -6,7 +6,7 @@ import { useDraftStore } from "./draft";
 
 export const useTransactionStore = defineStore("transaction", {
   state: () => ({
-    paginatedTransactions: [],
+    transactions: [],
     totalTransactions: 0,
     search: "",
     selectedTransactionId: null,
@@ -71,11 +71,12 @@ export const useTransactionStore = defineStore("transaction", {
             order: this.order,
             search: this.search,
             type: this.selectedType,
+            tag: this.selectedTag,
             month: this.selectedMonth,
             year: this.selectedYear,
           },
         });
-        this.paginatedTransactions = data.transactions;
+        this.transactions = data.transactions;
         this.totalTransactions = data.count;
       } catch (error) {
         console.log(error);

@@ -1,6 +1,10 @@
 <template>
   <v-container class="d-flex justify-center">
-    <v-card title="Transactions" flat style="min-width: 90vw; min-height: 90vh">
+    <v-card
+      title="Transactions"
+      flat
+      style="min-width: 90vw; max-height: 88vh; min-height: 88vh"
+    >
       <template v-slot:text>
         <v-row>
           <!-- Search Field -->
@@ -98,7 +102,7 @@
       <v-data-table-server
         v-model:items-per-page="transactionStore.itemsPerPage"
         :headers="headers"
-        :items="transactionStore.paginatedTransactions"
+        :items="transactionStore.transactions"
         :items-length="transactionStore.totalTransactions"
         loading-text="Loading... Please wait"
         :search="transactionStore.search"
@@ -106,7 +110,7 @@
         @update:options="transactionStore.updateOptions"
         mobile-breakpoint="sm"
         fixed-header
-        :height="'55vh'"
+        :height="'50vh'"
       >
         <template v-slot:[`item.actions`]="{ item }">
           <v-btn
@@ -174,7 +178,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useTransactionStore } from "@/stores/transaction";
 import { useUserStore } from "@/stores/user";
 import _ from "lodash";
@@ -186,6 +190,11 @@ import { useRouter } from "vue-router";
 const transactionStore = useTransactionStore();
 const userStore = useUserStore();
 const router = useRouter();
+
+onMounted(async () => {
+  await transactionStore.fetchTypes();
+  await transactionStore.fetchTags();
+});
 
 const years = generateYears();
 

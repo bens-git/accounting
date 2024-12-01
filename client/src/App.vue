@@ -106,7 +106,7 @@ body,
 #app {
   height: 100%;
   margin: 0;
-  overflow: hidden; /* Prevent vertical scroll */
+  overflow: hidden !important; /* Disable vertical scrolling for the entire app */
 }
 
 .v-application {

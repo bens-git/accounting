@@ -90,6 +90,7 @@ const logoutDialog = ref(false);
 const links = [
   { text: "TRANSACTIONS", route: "transaction-list" },
   { text: "DRAFTS", route: "drafts-list" },
+  { text: "SUMMARY", route: "monthly-summary" },
 ];
 
 // Safeguard to handle undefined or null paths

@@ -3,9 +3,16 @@ import EmailVerified from "@/components/EmailVerified.vue";
 import EditUser from "@/components/EditUser.vue";
 import LoginForm from "@/components/LoginForm.vue";
 import TransactionList from "@/components/TransactionList.vue";
+import MonthlySummary from "@/components/MonthlySummary.vue";
 import { useUserStore } from "@/stores/user"; // Adjust the import path as necessary
 
 const routes = [
+  {
+    path: "/monthly-summary",
+    name: "monthly-summary",
+    component: MonthlySummary,
+    meta: { requiresAuth: true },
+  },
   {
     path: "/transaction-list",
     name: "transaction-list",

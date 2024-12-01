@@ -50,6 +50,11 @@ class TransactionController extends Controller
             $query->where('type', '=', $request->input('type'));
         }
 
+        // Apply tag filter if provided
+        if ($request->filled('tag')) {
+            $query->where('tag', '=', $request->input('tag'));
+        }
+
         // Year filter
         if ($request->filled('year')) {
             $query->whereYear('date', $year);
@@ -108,7 +113,7 @@ class TransactionController extends Controller
 
 
         // Base query for data
-        $users = User::orderBy('name', 'ASC')->select('name', 'id')->get();
+        $users = User::orderBy('id', 'ASC')->select('name', 'id', 'maintenance_percentage')->get();
 
         $total = $users->count();
 
