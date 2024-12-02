@@ -47,4 +47,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/populate-month', [DraftController::class, 'populateMonth']);
     Route::patch('/transactions/{id}', [TransactionController::class, 'patch']);
     Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
+    Route::delete('/drafts/{id}', [DraftController::class, 'destroy']);
 });
