@@ -34,11 +34,7 @@
     <v-menu v-if="userStore.user">
       <template v-slot:activator="{ props }">
         <v-btn color="primary" v-bind="props">
-          {{
-            userStore.user.discord_username
-              ? userStore.user.discord_username
-              : userStore.user.name
-          }}
+          {{ userStore.user.name }}
           <v-icon right>mdi-menu-down</v-icon>
         </v-btn>
       </template>
@@ -54,10 +50,10 @@
     </v-menu>
 
     <v-btn v-if="!userStore.user" to="login-form" text> Login </v-btn>
-    <v-btn v-if="!userStore.user" to="register-form" text> Register </v-btn>
+    <!-- <v-btn v-if="!userStore.user" to="register-form" text> Register </v-btn>
     <v-btn v-if="!userStore.user" to="request-password-reset-form" text>
       Forgot Password
-    </v-btn>
+    </v-btn> -->
 
     <!-- Logout Confirmation Dialog -->
     <v-dialog v-model="logoutDialog" max-width="400">
